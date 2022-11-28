@@ -2,4 +2,7 @@ build:
   docker:
     web: Dockerfile
   config:
+    HOST: 103.42.214.141
     SHOPIFY_API_KEY: 694166630e41921a6c4cbf4bdd3891cc
+    SHOPIFY_API_SECRET: 4a8c9593e71ab0c77aed61f0c2d06fbd
+    SCOPES: write_products
