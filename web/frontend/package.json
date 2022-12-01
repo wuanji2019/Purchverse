@@ -3,7 +3,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "vite build",
+    "build": "cross-env SHOPIFY_API_KEY=694166630e41921a6c4cbf4bdd3891cc vite build",
     "dev": "vite",
     "coverage": "vitest run --coverage"
   },

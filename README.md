@@ -174,7 +174,7 @@ We fixed this issue with v3.4.0 of the CLI, so after updating it, you can make t
      hmrConfig = {
        protocol: "wss",
        host: host,
-       port: process.env.FRONTEND_PORT,
+       port: 8082,
        clientPort: 443,
      };
    }

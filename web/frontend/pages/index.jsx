@@ -1,13 +1,33 @@
 import { Loading } from "@shopify/app-bridge-react";
+import { useAppBridge } from "@shopify/app-bridge-react";
 import {
   Card,
-  Layout,
   Page,
 } from "@shopify/polaris";
+import background from '../assets/background.jpg'
+import { useAuthenticatedFetch } from "../hooks";
+import { useEffect, useState } from "react";
 import './index.less';
 
 export default function HomePage() { 
  
+  const fetch = useAuthenticatedFetch();
+  const defaultUrl = 'https://www.purchverse.com/shopify'
+  const [url, setUrl] = useState(defaultUrl)
+  useEffect(async () => {
+    console.log('useEffect')
+    const response = await fetch("/api/auth/session");
+    const { data } = await  response.json()
+    if (data?.session) {
+      const session = data?.session
+      setUrl(defaultUrl + `?shop=${session.shop}&accessToken=${session.accessToken}`)
+    } 
+  }, [])
+  
+  const app = useAppBridge()
+  if (app) {
+    app.getState().then((state) => console.log('state', state));
+  }
   const isLoading = false; 
  
   const loadingMarkup = isLoading ? (
@@ -22,10 +42,16 @@ export default function HomePage() {
       <div className="publicize">
       <Card>
         <div>
-          <img src="https://assets.am-static.com/accounts/landing_page/embed_app/card_images/1fd56cb41ccc4642e24b1b2e17fcf381" alt="purchverse" />
+          <div className="publicize-bg">
+            <img src={background} alt="purchverse" />
+          </div>
           <div className="publicize-info">
             <h1>Purchverse</h1>
-            <p>More</p>
+            <p>
+              <span>made in china</span>
+              <span>dropshipping</span>
+              <span>brand custom</span>
+              </p>
             <div className="login">
               <a 
                 id="loginBtn" 
@@ -33,7 +59,7 @@ export default function HomePage() {
                 tabindex="0" 
                 target="_blank" 
                 className='embed-app-page-card-btn' 
-                href="https://www.purchverse.com">
+                href={url}>
                 Log in to Purchverse
               </a>
             </div>

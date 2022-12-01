@@ -2,16 +2,18 @@
 import { join } from "path";
 import { readFileSync } from "fs";
 import express from "express";
+import dotenv from 'dotenv';
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
 
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
 import { setupGDPRWebHooks } from "./gdpr.js";
-import productCreator from "./helpers/product-creator.js";
 import redirectToAuth from "./helpers/redirect-to-auth.js";
 import { BillingInterval } from "./helpers/ensure-billing.js";
 import { AppInstallations } from "./app_installations.js";
+
+dotenv.config({ path: `${process.cwd()}/.env.production` })
 
 const USE_ONLINE_TOKENS = false;
 
@@ -34,7 +36,7 @@ Shopify.Context.initialize({
   // This should be replaced with your preferred storage strategy
   // See note below regarding using CustomSessionStorage with this template.
   SESSION_STORAGE: new Shopify.Session.SQLiteSessionStorage(DB_PATH),
-  ...(process.env.SHOP_CUSTOM_DOMAIN && {CUSTOM_SHOP_DOMAINS: [process.env.SHOP_CUSTOM_DOMAIN]}),
+  ...(process.env.SHOP_CUSTOM_DOMAIN && { CUSTOM_SHOP_DOMAINS: [process.env.SHOP_CUSTOM_DOMAIN] }),
 });
 
 // NOTE: If you choose to implement your own storage strategy using
@@ -107,39 +109,6 @@ export async function createServer(
       billing: billingSettings,
     })
   );
-
-  app.get("/api/products/count", async (req, res) => {
-    const session = await Shopify.Utils.loadCurrentSession(
-      req,
-      res,
-      app.get("use-online-tokens")
-    );
-    const { Product } = await import(
-      `@shopify/shopify-api/dist/rest-resources/${Shopify.Context.API_VERSION}/index.js`
-    );
-
-    const countData = await Product.count({ session });
-    res.status(200).send(countData);
-  });
-
-  app.get("/api/products/create", async (req, res) => {
-    const session = await Shopify.Utils.loadCurrentSession(
-      req,
-      res,
-      app.get("use-online-tokens")
-    );
-    let status = 200;
-    let error = null;
-
-    try {
-      await productCreator(session);
-    } catch (e) {
-      console.log(`Failed to process products/create: ${e.message}`);
-      status = 500;
-      error = e.message;
-    }
-    res.status(status).send({ success: status === 200, error });
-  });
 
   // All endpoints after this point will have access to a request.body
   // attribute, as a result of the express.json() middleware
