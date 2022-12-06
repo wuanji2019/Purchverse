@@ -4,7 +4,8 @@ import {
   Card,
   Page,
 } from "@shopify/polaris";
-import background from '../assets/background.jpg'
+import { background } from "../assets";
+
 import { useAuthenticatedFetch } from "../hooks";
 import { useEffect, useState } from "react";
 import './index.less';

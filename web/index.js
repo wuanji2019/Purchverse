@@ -163,7 +163,7 @@ export async function createServer(
       isProd ? PROD_INDEX_PATH : DEV_INDEX_PATH,
       "index.html"
     );
-
+    console.log(htmlFile);
     return res
       .status(200)
       .set("Content-Type", "text/html")
@@ -172,5 +172,4 @@ export async function createServer(
 
   return { app };
 }
-
 createServer().then(({ app }) => app.listen(PORT));

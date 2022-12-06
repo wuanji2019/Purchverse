@@ -62,7 +62,6 @@ export default function applyAuthMiddleware(
         shop: session.shop,
         accessToken: session.accessToken,
       });
-
       Object.entries(responses).map(([topic, response]) => {
         // The response from registerAll will include errors for the GDPR topics.  These can be safely ignored.
         // To register the GDPR topics, please set the appropriate webhook endpoint in the
