@@ -13,17 +13,17 @@ import redirectToAuth from "./helpers/redirect-to-auth.js";
 import { BillingInterval } from "./helpers/ensure-billing.js";
 import { AppInstallations } from "./app_installations.js";
 
-dotenv.config({ path: `${process.cwd()}/.env.production` })
+dotenv.config({ path: `${process.cwd()}/web/.env.production` })
 
 const USE_ONLINE_TOKENS = false;
 
 const PORT = parseInt(process.env.BACKEND_PORT || process.env.PORT, 10);
 
 // TODO: There should be provided by env vars
-const DEV_INDEX_PATH = `${process.cwd()}/frontend/`;
-const PROD_INDEX_PATH = `${process.cwd()}/frontend/dist/`;
+const DEV_INDEX_PATH = `${process.cwd()}/web/frontend/`;
+const PROD_INDEX_PATH = `${process.cwd()}/web/frontend/dist/`;
 
-const DB_PATH = `${process.cwd()}/database.sqlite`;
+const DB_PATH = `${process.cwd()}/web/database.sqlite`;
 
 Shopify.Context.initialize({
   API_KEY: process.env.SHOPIFY_API_KEY,
@@ -73,7 +73,7 @@ setupGDPRWebHooks("/api/webhooks");
 
 // export for test use only
 export async function createServer(
-  root = process.cwd(),
+  root = `${process.cwd()}/web`,
   isProd = process.env.NODE_ENV === "production",
   billingSettings = BILLING_SETTINGS
 ) {
@@ -163,7 +163,6 @@ export async function createServer(
       isProd ? PROD_INDEX_PATH : DEV_INDEX_PATH,
       "index.html"
     );
-    console.log(htmlFile);
     return res
       .status(200)
       .set("Content-Type", "text/html")

@@ -1,22 +1,15 @@
-import { Loading } from "@shopify/app-bridge-react";
-import { useAppBridge } from "@shopify/app-bridge-react";
-import {
-  Card,
-  Page,
-} from "@shopify/polaris";
+import { Card, Page } from "@shopify/polaris";
 import { background } from "../assets";
 
 import { useAuthenticatedFetch } from "../hooks";
 import { useEffect, useState } from "react";
 import './index.less';
 
-export default function HomePage() { 
- 
+export default function HomePage() {
   const fetch = useAuthenticatedFetch();
   const defaultUrl = 'https://www.purchverse.com/shopify'
   const [url, setUrl] = useState(defaultUrl)
   useEffect(async () => {
-    console.log('useEffect')
     const response = await fetch("/api/auth/session");
     const { data } = await  response.json()
     if (data?.session) {
@@ -24,19 +17,6 @@ export default function HomePage() {
       setUrl(defaultUrl + `?shop=${session.shop}&accessToken=${session.accessToken}`)
     } 
   }, [])
-  
-  const app = useAppBridge()
-  if (app) {
-    app.getState().then((state) => console.log('state', state));
-  }
-  const isLoading = false; 
- 
-  const loadingMarkup = isLoading ? (
-    <Card sectioned>
-      <Loading />
-    </Card>
-  ) : null;
- 
  
   return (
     <Page>
