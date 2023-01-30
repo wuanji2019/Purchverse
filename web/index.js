@@ -2,21 +2,25 @@
 import { join } from "path";
 import { readFileSync } from "fs";
 import express from "express";
-import dotenv from 'dotenv';
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
 
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
 import { setupGDPRWebHooks } from "./gdpr.js";
+import productCreator from "./helpers/product-creator.js";
 import redirectToAuth from "./helpers/redirect-to-auth.js";
+// @ts-ignore
 import { BillingInterval } from "./helpers/ensure-billing.js";
 import { AppInstallations } from "./app_installations.js";
+
+import dotenv from 'dotenv';
 
 dotenv.config({ path: `${process.cwd()}/web/.env.production` })
 
 const USE_ONLINE_TOKENS = false;
 
+// @ts-ignore
 const PORT = parseInt(process.env.BACKEND_PORT || process.env.PORT, 10);
 
 // TODO: There should be provided by env vars
@@ -26,17 +30,22 @@ const PROD_INDEX_PATH = `${process.cwd()}/web/frontend/dist/`;
 const DB_PATH = `${process.cwd()}/web/database.sqlite`;
 
 Shopify.Context.initialize({
+  // @ts-ignore
   API_KEY: process.env.SHOPIFY_API_KEY,
+  // @ts-ignore
   API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
+  // @ts-ignore
   SCOPES: process.env.SCOPES.split(","),
+  // @ts-ignore
   HOST_NAME: process.env.HOST.replace(/https?:\/\//, ""),
+  // @ts-ignore
   HOST_SCHEME: process.env.HOST.split("://")[0],
   API_VERSION: LATEST_API_VERSION,
   IS_EMBEDDED_APP: true,
   // This should be replaced with your preferred storage strategy
   // See note below regarding using CustomSessionStorage with this template.
   SESSION_STORAGE: new Shopify.Session.SQLiteSessionStorage(DB_PATH),
-  ...(process.env.SHOP_CUSTOM_DOMAIN && { CUSTOM_SHOP_DOMAINS: [process.env.SHOP_CUSTOM_DOMAIN] }),
+  // ...(process.env.SHOP_CUSTOM_DOMAIN && { CUSTOM_SHOP_DOMAINS: [process.env.SHOP_CUSTOM_DOMAIN] }),
 });
 
 // NOTE: If you choose to implement your own storage strategy using
@@ -73,6 +82,7 @@ setupGDPRWebHooks("/api/webhooks");
 
 // export for test use only
 export async function createServer(
+  // @ts-ignore
   root = `${process.cwd()}/web`,
   isProd = process.env.NODE_ENV === "production",
   billingSettings = BILLING_SETTINGS
@@ -83,6 +93,7 @@ export async function createServer(
   app.use(cookieParser(Shopify.Context.API_SECRET_KEY));
 
   applyAuthMiddleware(app, {
+    // @ts-ignore
     billing: billingSettings,
   });
 
@@ -106,15 +117,128 @@ export async function createServer(
   app.use(
     "/api/*",
     verifyRequest(app, {
+      // @ts-ignore
       billing: billingSettings,
     })
   );
+
+  app.get("/customers/data_request", async (req, res) => {
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      app.get("use-online-tokens")
+    );
+    // @ts-ignore
+    const { shop, accessToken } = session
+    const response = await fetch('https://api.purchverse.com/service/gdpr/customers/dataRequest', {
+      method: 'post',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        domain: shop,
+        password: accessToken,
+        secrets: ''
+      })
+    })
+    const data = await response.json()
+    console.log(data)
+    res.status(200).send(data.data);
+  });
+
+  app.get("/customers/redact", async (req, res) => {
+    console.log('aaa')
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      app.get("use-online-tokens")
+    );
+    console.log('bbb', session)
+    // @ts-ignore
+    const { shop, accessToken } = session
+    const response = await fetch('https://api.purchverse.com/service/gdpr/customers/redact', {
+      method: 'post',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        domain: shop,
+        password: accessToken,
+        secrets: ''
+      })
+    })
+    const data = await response.json()
+    console.log(data)
+    res.status(200).send(data.data);
+  });
+
+  app.get("/shop/redact", async (req, res) => {
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      app.get("use-online-tokens")
+    );
+    // @ts-ignore
+    const { shop, accessToken } = session
+    const response = await fetch('https://api.purchverse.com/service/gdpr/shop/redact', {
+      method: 'post',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        domain: shop,
+        password: accessToken,
+        secrets: ''
+      })
+    })
+    const data = await response.json()
+    console.log(data)
+    res.status(200).send(data.data);
+  });
+
+  app.get("/api/products/count", async (req, res) => {
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      app.get("use-online-tokens")
+    );
+    const { Product } = await import(
+      `@shopify/shopify-api/dist/rest-resources/${Shopify.Context.API_VERSION}/index.js`
+    );
+
+    const countData = await Product.count({ session });
+    res.status(200).send(countData);
+  });
+
+  app.get("/api/products/create", async (req, res) => {
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      app.get("use-online-tokens")
+    );
+    let status = 200;
+    let error = null;
+
+    try {
+      await productCreator(session);
+    } catch (e) {
+      console.log(`Failed to process products/create: ${e.message}`);
+      status = 500;
+      error = e.message;
+    }
+    res.status(status).send({ success: status === 200, error });
+  });
+
 
   // All endpoints after this point will have access to a request.body
   // attribute, as a result of the express.json() middleware
   app.use(express.json());
 
   app.use((req, res, next) => {
+    // @ts-ignore
     const shop = Shopify.Utils.sanitizeShop(req.query.shop);
     if (Shopify.Context.IS_EMBEDDED_APP && shop) {
       res.setHeader(
@@ -140,8 +264,10 @@ export async function createServer(
     app.use(serveStatic(PROD_INDEX_PATH, { index: false }));
   }
 
+  // @ts-ignore
   app.use("/*", async (req, res, next) => {
     if (typeof req.query.shop !== "string") {
+      // res.status(401);
       res.status(500);
       return res.send("No shop provided");
     }
@@ -149,15 +275,26 @@ export async function createServer(
     const shop = Shopify.Utils.sanitizeShop(req.query.shop);
     const appInstalled = await AppInstallations.includes(shop);
 
-    if (!appInstalled && !req.originalUrl.match(/^\/exitiframe/i)) {
+    if (!appInstalled) {
       return redirectToAuth(req, res, app);
     }
+
 
     if (Shopify.Context.IS_EMBEDDED_APP && req.query.embedded !== "1") {
       const embeddedUrl = Shopify.Utils.getEmbeddedAppUrl(req);
 
       return res.redirect(embeddedUrl + req.path);
     }
+
+    // if (!appInstalled && !req.originalUrl.match(/^\/exitiframe/i)) {
+    //   return redirectToAuth(req, res, app);
+    // }
+
+    // if (Shopify.Context.IS_EMBEDDED_APP && req.query.embedded !== "1") {
+    //   const embeddedUrl = Shopify.Utils.getEmbeddedAppUrl(req);
+
+    //   return res.redirect(embeddedUrl + req.path);
+    // }
 
     const htmlFile = join(
       isProd ? PROD_INDEX_PATH : DEV_INDEX_PATH,

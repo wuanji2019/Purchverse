@@ -15,7 +15,7 @@ module.exports = {
         NODE_ENV: "production",
         BACKEND_PORT: 8082,
         PORT: 3000,
-        HOST: 'https://shopifygate.purchverse.com',
+        HOST: 'https://gate.purchverse.com',
         SHOPIFY_API_KEY: 'c66a4eb1ead92e91c4bc1014fd586a99',
         SHOPIFY_API_SECRET: '7b2cb58ec008adf866d7e6daa1b9abed',
         SCOPES: 'write_products'
@@ -24,7 +24,7 @@ module.exports = {
         NODE_ENV: "production",
         BACKEND_PORT: 8082,
         PORT: 3000,
-        HOST: 'https://shopifygate.purchverse.com',
+        HOST: 'https://gate.purchverse.com',
         SHOPIFY_API_KEY: 'c66a4eb1ead92e91c4bc1014fd586a99',
         SHOPIFY_API_SECRET: '7b2cb58ec008adf866d7e6daa1b9abed',
         SCOPES: 'write_products'

@@ -1,4 +1,5 @@
 import { Shopify } from "@shopify/shopify-api";
+import fetch from 'node-fetch';
 
 export function setupGDPRWebHooks(path) {
   /**
@@ -10,7 +11,28 @@ export function setupGDPRWebHooks(path) {
   Shopify.Webhooks.Registry.addHandler("CUSTOMERS_DATA_REQUEST", {
     path,
     webhookHandler: async (topic, shop, body) => {
-      const payload = JSON.parse(body);
+      const session = await Shopify.Utils.loadCurrentSession(
+        req,
+        res,
+        app.get("use-online-tokens")
+      );
+      const { accessToken } = session
+      const response = await fetch('https://api.purchverse.com/service/gdpr/customers/dataRequest', {
+        method: 'post',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain: shop,
+          password: accessToken,
+          secrets: ''
+        })
+      })
+      const data = await response.json()
+      console.log(data)
+      return data.data;
+      // const payload = JSON.parse(body);
       // Payload has the following shape:
       // {
       //   "shop_id": 954889,
@@ -41,7 +63,28 @@ export function setupGDPRWebHooks(path) {
   Shopify.Webhooks.Registry.addHandler("CUSTOMERS_REDACT", {
     path,
     webhookHandler: async (topic, shop, body) => {
-      const payload = JSON.parse(body);
+      const session = await Shopify.Utils.loadCurrentSession(
+        req,
+        res,
+        app.get("use-online-tokens")
+      );
+      const { accessToken } = session
+      const response = await fetch('https://api.purchverse.com/service/gdpr/customers/redact', {
+        method: 'post',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain: shop,
+          password: accessToken,
+          secrets: ''
+        })
+      })
+      const data = await response.json()
+      console.log(data)
+      return data.data;
+      // const payload = JSON.parse(body);
       // Payload has the following shape:
       // {
       //   "shop_id": 954889,
@@ -69,7 +112,28 @@ export function setupGDPRWebHooks(path) {
   Shopify.Webhooks.Registry.addHandler("SHOP_REDACT", {
     path,
     webhookHandler: async (topic, shop, body) => {
-      const payload = JSON.parse(body);
+      const session = await Shopify.Utils.loadCurrentSession(
+        req,
+        res,
+        app.get("use-online-tokens")
+      );
+      const { accessToken } = session
+      const response = await fetch('https://api.purchverse.com/service/gdpr/shop/redact', {
+        method: 'post',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain: shop,
+          password: accessToken,
+          secrets: ''
+        })
+      })
+      const data = await response.json()
+      console.log(data)
+      return data.data;
+      // const payload = JSON.parse(body);
       // Payload has the following shape:
       // {
       //   "shop_id": 954889,
