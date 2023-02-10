@@ -18,7 +18,7 @@ module.exports = {
         HOST: 'https://gate.purchverse.com',
         SHOPIFY_API_KEY: 'c66a4eb1ead92e91c4bc1014fd586a99',
         SHOPIFY_API_SECRET: '7b2cb58ec008adf866d7e6daa1b9abed',
-        SCOPES: 'write_products'
+        SCOPES: 'read_all_orders,read_orders,write_orders,read_customers,write_customers,read_products,write_products'
       },
       env_production: {
         NODE_ENV: "production",
@@ -27,7 +27,7 @@ module.exports = {
         HOST: 'https://gate.purchverse.com',
         SHOPIFY_API_KEY: 'c66a4eb1ead92e91c4bc1014fd586a99',
         SHOPIFY_API_SECRET: '7b2cb58ec008adf866d7e6daa1b9abed',
-        SCOPES: 'write_products'
+        SCOPES: 'read_all_orders,read_orders,write_orders,read_customers,write_customers,read_products,write_products'
       }
     }
   ],
